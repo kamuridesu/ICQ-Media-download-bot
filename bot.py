@@ -39,7 +39,6 @@ def saveFile(data: bytes, _type: str):
 
 @dp.message_handler()
 def getAllMedia(message: ReceivedMessage) -> None:
-    print(message)
     if len(message.payloads) > 0:
         for p in message.payloads:
             if p.type == "file":
