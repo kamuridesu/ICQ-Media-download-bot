@@ -4,6 +4,7 @@ from random import randint
 import os
 import sys
 import logging
+import asyncio
 
 logging.basicConfig(filename="logs.log", level=logging.INFO)
 
@@ -38,17 +39,18 @@ def saveFile(data: bytes, _type: str):
 
 
 @dp.message_handler()
-def getAllMedia(message: ReceivedMessage) -> None:
+async def getAllMedia(message: ReceivedMessage) -> None:
     if len(message.payloads) > 0:
         for p in message.payloads:
             if p.type == "file":
                 try:
+                    msg = message.reply("Downloading...")
                     saveFile(bot.downloadFile(p.payload.file_id), p.payload.type)
-                    return message.reply("media download successful")
+                    return msg.edit("media download successful")
                 except Exception:
                     logging.error(p.payload.file_id)
-                    return message.reply("media download failed!")
+                    return msg.edit("media download failed!")
 
 
 if __name__ == "__main__":
-    dp.start_polling()
+    asyncio.run(dp.start_polling())
