@@ -1,1 +1,1 @@
-ICQBot==0.2.0b0
+ICQBot==0.2.1b0
