@@ -5,10 +5,39 @@ from random import randint
 import os
 import sys
 from zipfile import ZipFile
-from tempfile import NamedTemporaryFile
+import tempfile
 import logging
 
 logging.basicConfig(filename="log.log", level=logging.INFO, datefmt="%Y-%m-%d,%H:%M:%S")
+
+
+class CustomNamedTemporaryFile:
+    """
+    This custom implementation is needed because of the following limitation of tempfile.NamedTemporaryFile:
+
+    > Whether the name can be used to open the file a second time, while the named temporary file is still open,
+    > varies across platforms (it can be so used on Unix; it cannot on Windows NT or later).
+    """
+    def __init__(self, mode='wb', delete=True, prefix="", suffix=""):
+        self._mode = mode
+        self._delete = delete
+        self._prefix = prefix
+        self._suffix = suffix
+
+    def __enter__(self):
+        # Generate a random temporary file name
+        file_name = os.path.join(tempfile.gettempdir(), self._prefix + str(os.urandom(24).hex()) + self._suffix)
+        # Ensure the file is created
+        open(file_name, "x").close()
+        # Open the file in the given mode
+        self._tempFile = open(file_name, self._mode)
+        return self._tempFile
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self._tempFile.close()
+        if self._delete:
+            os.remove(self._tempFile.name)
+
 
 bot = ICQBot("")
 dp = Dispatcher(bot)
@@ -26,7 +55,7 @@ def generateRandomFilename():
 def zipFile(filename, _bytes, ext) -> bytes:
     print("ziping")
     with ZipFile(filename + ".zip", "w") as _zip:
-        with NamedTemporaryFile("wb", suffix=ext) as f:
+        with CustomNamedTemporaryFile("wb", suffix=ext) as f:
             f.write(_bytes)
             _zip.write(f.name)
 
